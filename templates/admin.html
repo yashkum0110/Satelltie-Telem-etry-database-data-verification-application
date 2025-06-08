@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}Admin: Upload Database | Data Matching System{% endblock %}
+
+{% block content %}
+<style>
+    .upload-container { max-width: 700px; margin: 2rem auto; } /* [cite: 131] */
+    .upload-header h1 { font-family: 'Montserrat', sans-serif; color: var(--primary); margin-bottom: 0.5rem; font-size: 2.2rem; font-weight: 700; text-align: center; } /* [cite: 135] */
+    .upload-header p { color: #555; text-align: center; margin-bottom: 2rem; font-size: 1.1rem; }
+    .upload-box { border: 2px dashed var(--primary-light); border-radius: 12px; padding: 2.5rem; text-align: center; margin: 2rem 0; background: rgba(67, 97, 238, 0.03); transition: all 0.3s ease; } /* [cite: 13, 109] */
+    .upload-box:hover { border-color: var(--accent); background: rgba(67, 97, 238, 0.07); transform: translateY(-3px); } /* [cite: 15, 111] */
+    .file-input-label { display: block; padding: 1rem 2rem; background: var(--primary); color: white; border-radius: 50px; cursor: pointer; transition: all 0.3s ease; font-weight: 600; margin: 1rem auto 1.5rem; width: fit-content; box-shadow: 0 4px 15px rgba(67, 97, 238, 0.3); } /* [cite: 18, 19, 20] */
+    .file-input-label:hover { background: var(--secondary); transform: translateY(-2px); box-shadow: 0 6px 20px rgba(67, 97, 238, 0.4); } /* [cite: 20, 21, 22] */
+    .file-name-display { margin-top: 1rem; font-size: 0.95rem; color: var(--dark); font-weight: 500; } /* [cite: 27, 28] */
+    .submit-btn-custom { background: var(--accent); color: white; border: none; padding: 0.9rem 2.5rem; font-size: 1.1rem; border-radius: 50px; cursor: pointer; transition: all 0.3s ease; font-weight: 600; display: block; margin: 1.5rem auto 0; width: fit-content; box-shadow: 0 4px 15px rgba(72, 149, 239, 0.3); } /* [cite: 22, 23, 24] */
+    .submit-btn-custom:hover { background: #3a86ff; transform: translateY(-2px); box-shadow: 0 6px 20px rgba(72, 149, 239, 0.4); } /* [cite: 25, 26] */
+</style>
+
+<div class="upload-container">
+    <div class="upload-header">
+        <h1>Admin Database Upload</h1>
+        <p>Upload the main reference Excel file. You will then configure the sheet and key field for matching.</p>
+    </div>
+    
+    <form method="POST" enctype="multipart/form-data">
+        <div class="upload-box">
+            <div class="icon mb-3"> <svg xmlns="http://www.w3.org/2000/svg" width="56" height="56" fill="var(--accent)" class="bi bi-cloud-arrow-up-fill" viewBox="0 0 16 16">
+                    <path d="M8 2a5.53 5.53 0 0 0-3.594 1.342c-.766.66-1.321 1.52-1.464 2.383C1.266 6.095 0 7.555 0 9.318 0 11.366 1.708 13 3.781 13h8.906C14.502 13 16 11.57 16 9.773c0-1.636-1.242-2.969-2.834-3.194C12.923 3.999 10.69 2 8 2zm2.354 5.146a.5.5 0 0 1-.708.708L8.5 6.707V10.5a.5.5 0 0 1-1 0V6.707L6.354 7.854a.5.5 0 1 1-.708-.708l2-2a.5.5 0 0 1 .708 0l2 2z"/>
+                  </svg>
+            </div>
+            
+            <input type="file" name="database" id="fileInput" class="d-none" required onchange="displayFileName(this)"> <label for="fileInput" class="file-input-label">Choose Database File (.xlsx, .xls)</label>
+            <div id="fileNameDisplay" class="file-name-display">No file selected</div> </div>
+                
+        <button type="submit" class="submit-btn-custom">Upload & Configure</button>
+    </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function displayFileName(input) {
+        const fileNameDisplay = document.getElementById('fileNameDisplay');
+        if (input.files.length > 0) {
+            fileNameDisplay.textContent = input.files[0].name; /* [cite: 47] */
+            fileNameDisplay.style.color = 'var(--primary)'; /* [cite: 48] */
+            fileNameDisplay.style.fontWeight = '600'; /* [cite: 48] */
+        } else {
+            fileNameDisplay.textContent = 'No file selected'; /* [cite: 48] */
+            fileNameDisplay.style.color = ''; /* [cite: 49] */
+            fileNameDisplay.style.fontWeight = ''; /* [cite: 49] */
+        }
+    }
+</script>
+{% endblock %}

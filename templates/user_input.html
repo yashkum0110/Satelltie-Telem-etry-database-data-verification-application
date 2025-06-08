@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}User Input | Data Matching System{% endblock %}
+
+{% block content %}
+<style>
+    /* Reusing styles from admin.html for consistency */
+    .upload-container { max-width: 700px; margin: 2rem auto; }
+    .upload-header h1 { font-family: 'Montserrat', sans-serif; color: var(--primary); margin-bottom: 0.5rem; font-size: 2.2rem; font-weight: 700; text-align: center; }
+    .upload-header p { color: #555; text-align: center; margin-bottom: 2rem; font-size: 1.1rem; }
+    .upload-box { border: 2px dashed var(--primary-light); border-radius: 12px; padding: 2.5rem; text-align: center; margin: 2rem 0; background: rgba(67, 97, 238, 0.03); transition: all 0.3s ease; }
+    .upload-box:hover { border-color: var(--accent); background: rgba(67, 97, 238, 0.07); transform: translateY(-3px); }
+    .file-input-label { display: block; padding: 1rem 2rem; background: var(--primary); color: white; border-radius: 50px; cursor: pointer; transition: all 0.3s ease; font-weight: 600; margin: 1rem auto 1.5rem; width: fit-content; box-shadow: 0 4px 15px rgba(67, 97, 238, 0.3); }
+    .file-input-label:hover { background: var(--secondary); transform: translateY(-2px); box-shadow: 0 6px 20px rgba(67, 97, 238, 0.4); }
+    .file-name-display { margin-top: 1rem; font-size: 0.95rem; color: var(--dark); font-weight: 500; }
+    .submit-btn-custom { background: var(--accent); color: white; border: none; padding: 0.9rem 2.5rem; font-size: 1.1rem; border-radius: 50px; cursor: pointer; transition: all 0.3s ease; font-weight: 600; display: block; margin: 1.5rem auto 0; width: fit-content; box-shadow: 0 4px 15px rgba(72, 149, 239, 0.3); }
+    .submit-btn-custom:hover { background: #3a86ff; transform: translateY(-2px); box-shadow: 0 6px 20px rgba(72, 149, 239, 0.4); }
+</style>
+
+<div class="upload-container">
+    <div class="upload-header">
+        <h1>Upload Your Data File</h1>
+        <p>Upload your Excel file. You will then select the sheet and parameters for comparison.</p>
+        <p class="text-muted small">The admin has configured the primary matching key as: <strong>{{ session.get('admin_key_field', 'Not yet configured') }}</strong></p>
+    </div>
+    
+    <form method="POST" enctype="multipart/form-data" action="{{ url_for('user_input') }}">
+        <div class="upload-box">
+            <div class="icon mb-3">
+                <svg xmlns="http://www.w3.org/2000/svg" width="56" height="56" fill="var(--accent)" class="bi bi-file-earmark-arrow-up-fill" viewBox="0 0 16 16">
+                    <path d="M9.293 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V4.707A1 1 0 0 0 13.707 4L10 .293A1 1 0 0 0 9.293 0zM9.5 3.5v-2l3 3h-2a1 1 0 0 1-1-1zM6.354 9.854a.5.5 0 0 1-.708-.708l2-2a.5.5 0 0 1 .708 0l2 2a.5.5 0 0 1-.708.708L8.5 8.707V12.5a.5.5 0 0 1-1 0V8.707L6.354 9.854z"/>
+                  </svg>
+            </div>
+            
+            <input type="file" name="userfile" id="userInputFile" class="d-none" required onchange="displayUserFileName(this)">
+            <label for="userInputFile" class="file-input-label">Choose Your File (.xlsx, .xls)</label>
+            <div id="userFileNameDisplay" class="file-name-display">No file selected</div>
+        </div>
+                
+        <button type="submit" class="submit-btn-custom">Upload & Configure Input</button>
+    </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function displayUserFileName(input) {
+        const fileNameDisplay = document.getElementById('userFileNameDisplay');
+        if (input.files.length > 0) {
+            fileNameDisplay.textContent = input.files[0].name;
+            fileNameDisplay.style.color = 'var(--primary)';
+            fileNameDisplay.style.fontWeight = '600';
+        } else {
+            fileNameDisplay.textContent = 'No file selected';
+            fileNameDisplay.style.color = '';
+            fileNameDisplay.style.fontWeight = '';
+        }
+    }
+</script>
+{% endblock %}

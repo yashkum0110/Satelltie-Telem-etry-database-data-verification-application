@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% block title %}Configure Database | Data Matching System{% endblock %}
+
+{% block content %}
+<style>
+    .configure-container { max-width: 800px; margin: 2rem auto; } /* [cite: 130, 131] */
+    .configure-header h1 { font-family: 'Montserrat', sans-serif; color: var(--primary); margin-bottom: 0.5rem; font-size: 2.2rem; font-weight: 700; text-align: center;} /* [cite: 135] */
+    .configure-header p { color: #555; text-align: center; margin-bottom: 2rem; font-size: 1.1rem;} /* [cite: 136] */
+    .form-group { margin-bottom: 1.75rem; } /* [cite: 137] */
+    .form-group label { display: block; margin-bottom: 0.6rem; font-weight: 600; color: var(--dark); } /* [cite: 137, 138] */
+    .form-select, .form-control { /* Combined styling for select and inputs if needed */
+        width: 100%; padding: 0.8rem 1rem; border: 1px solid #ccc; border-radius: 8px; font-family: 'Poppins', sans-serif; font-size: 1rem; transition: all 0.3s ease; } /* [cite: 139, 140] */
+    .form-select:focus, .form-control:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(72, 149, 239, 0.25); outline: none; } /* [cite: 141, 142] */
+    .form-actions { display: flex; gap: 1rem; margin-top: 2.5rem; justify-content: center; } /* [cite: 148] */
+    .submit-btn, .cancel-btn { /* General button styling */
+        padding: 0.8rem 2.2rem; font-size: 1rem; border-radius: 50px; cursor: pointer; transition: all 0.3s ease; font-weight: 600; text-decoration: none; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+    .submit-btn { background: var(--primary); color: white; border: none; } /* [cite: 149, 150] */
+    .submit-btn:hover { background: var(--secondary); transform: translateY(-2px); box-shadow: 0 6px 20px rgba(67, 97, 238, 0.4); } /* [cite: 151, 152] */
+    .cancel-btn { background: white; color: var(--primary); border: 2px solid var(--primary); } /* [cite: 153, 154] */
+    .cancel-btn:hover { background: rgba(67, 97, 238, 0.05); transform: translateY(-2px); box-shadow: 0 6px 20px rgba(67, 97, 238, 0.2); } /* [cite: 155, 156] */
+</style>
+
+<div class="configure-container">
+    <div class="configure-header">
+        <h1>Configure Admin Database</h1>
+        <p>Select the sheet and the primary key field from your uploaded database for matching.</p>
+    </div>
+
+    <form method="POST" action="{{ url_for('configure') }}">
+        <div class="form-group">
+            <label for="sheet_name">Select Sheet from Database:</label>
+            <select name="sheet_name" id="sheet_name" class="form-select" required>
+                <option value="">-- Select Sheet --</option>
+                {% for sheet in sheet_names %}
+                <option value="{{ sheet }}">{{ sheet }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="key_field">Key Field for Matching:</label> <select name="key_field" id="key_field" class="form-select" required disabled>
+                <option value="">-- Select Sheet First --</option>
+                {# Options will be populated by JavaScript #}
+            </select>
+        </div>
+        
+        <div class="form-actions">
+            <button type="submit" class="submit-btn">Save Configuration</button> <a href="{{ url_for('admin') }}" class="cancel-btn">Re-upload Database</a> </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const sheetSelect = document.getElementById('sheet_name');
+    const keyFieldSelect = document.getElementById('key_field');
+
+    sheetSelect.addEventListener('change', function() {
+        const selectedSheet = this.value;
+        keyFieldSelect.innerHTML = '<option value="">Loading columns...</option>'; // Reset
+        keyFieldSelect.disabled = true;
+
+        if (selectedSheet) {
+            fetch("{{ url_for('get_sheet_columns', file_type='admin_db') }}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    // Add CSRF token if your app uses Flask-WTF or similar for CSRF protection on POST
+                },
+                body: new URLSearchParams({ 'sheet_name': selectedSheet })
+            })
+            .then(response => response.json())
+            .then(data => {
+                keyFieldSelect.innerHTML = '<option value="">-- Select Key Field --</option>';
+                if (data.columns) {
+                    data.columns.forEach(column => {
+                        const option = document.createElement('option');
+                        option.value = column;
+                        option.textContent = column;
+                        keyFieldSelect.appendChild(option);
+                    });
+                    keyFieldSelect.disabled = false;
+                } else if (data.error) {
+                    keyFieldSelect.innerHTML = `<option value="">Error: ${data.error}</option>`;
+                     console.error("Error fetching columns: ", data.error);
+                }
+            })
+            .catch(error => {
+                keyFieldSelect.innerHTML = '<option value="">-- Error loading --</option>';
+                console.error('Error fetching columns:', error);
+            });
+        } else {
+            keyFieldSelect.innerHTML = '<option value="">-- Select Sheet First --</option>';
+            keyFieldSelect.disabled = true;
+        }
+    });
+});
+</script>
+{% endblock %}

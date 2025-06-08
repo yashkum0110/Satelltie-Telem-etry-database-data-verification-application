@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Data Matching System{% endblock %}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&family=Montserrat:wght@700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #4361ee; /* [cite: 3, 84, 128, 175, 220] */
+            --secondary: #3f37c9; /* [cite: 3, 84, 128, 175, 220] */
+            --accent: #4895ef; /* [cite: 3, 84, 128, 175, 220] */
+            --light: #f8f9fa; /* [cite: 3, 84, 128, 175, 220] */
+            --dark: #212529; /* [cite: 3, 84, 128, 175, 220] */
+            --success: #4cc9f0; /* [cite: 3, 84, 128, 176] */
+            --warning: #f72585; /* [cite: 3, 84, 128, 176] */
+            --danger: #b5179e; /* [cite: 85, 129] */
+        }
+        body {
+            font-family: 'Poppins', sans-serif; /* [cite: 5, 87] */
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); /* [cite: 6, 87, 177] */
+            min-height: 100vh; /* [cite: 6, 87] */
+            color: var(--dark); /* [cite: 6, 87] */
+            line-height: 1.6; /* [cite: 87] */
+            padding-top: 2rem; /* Add some padding at the top */
+            padding-bottom: 2rem; /* Add some padding at the bottom */
+        }
+        .main-container {
+            max-width: 1200px; /* [cite: 88] */
+            margin: 0 auto; /* [cite: 89] */ /* Simplified margin */
+            padding: 0 1.5rem; /* [cite: 89] */
+        }
+        .content-card {
+            background: white; /* [cite: 7, 89] */
+            border-radius: 16px; /* [cite: 8, 90, 130, 221] */
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1); /* [cite: 90] */
+            padding: 2rem 2.5rem; /* [cite: 90] */ /* Adjusted padding */
+            position: relative; /* [cite: 9, 91, 131, 222] */
+            overflow: hidden; /* [cite: 9, 91, 131, 222] */
+            animation: fadeIn 0.6s ease-out; /* [cite: 8, 91, 131, 222] */
+            margin-bottom: 2rem; /* [cite: 91] */
+        }
+        .content-card::before {
+            content: ''; /* [cite: 9, 92, 132, 181, 223] */
+            position: absolute; /* [cite: 10, 92, 132, 181, 223] */
+            top: 0; /* [cite: 10, 92, 132, 181, 223] */
+            left: 0; /* [cite: 10, 92, 132, 181, 223] */
+            width: 100%; /* [cite: 10, 92, 132, 181, 223] */
+            height: 8px; /* [cite: 10, 92, 132, 181, 223] */
+            background: linear-gradient(90deg, var(--primary), var(--accent)); /* [cite: 10, 92, 132, 182, 223] */
+        }
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Montserrat', sans-serif; /* [cite: 11, 93, 135, 182, 226] */
+            color: var(--primary); /* [cite: 12, 93, 135, 182, 226] */
+            margin-bottom: 1.5rem; /* [cite: 12, 93] */
+        }
+        /* Custom alert styling to match theme better */
+        .alert {
+            border-radius: .5rem; /* [cite: 94] */ /* Match 8px */
+            border-left-width: 4px; /* [cite: 95] */
+            padding: 1rem 1.5rem; /* [cite: 95] */
+            margin-bottom: 1.5rem; /* [cite: 95] */
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05); /* [cite: 95] */
+        }
+        .alert-success { background-color: rgba(76, 201, 240, 0.15); border-left-color: var(--success); color: #006494; } /* [cite: 31, 96, 97] */
+        .alert-danger { background-color: rgba(247, 37, 133, 0.1); border-left-color: var(--warning); color: #b5179e; } /* [cite: 33, 98] */
+        .alert-warning { background-color: rgba(255, 193, 7, 0.15); border-left-color: #ffc107; color: #856404; } /* [cite: 99] */
+        .alert-info    { background-color: rgba(23, 162, 184, 0.15); border-left-color: #17a2b8; color: #0c5460; } /* [cite: 100] */
+
+        .btn-primary { background-color: var(--primary); border-color: var(--primary); box-shadow: 0 4px 15px rgba(67, 97, 238, 0.3); transition: all 0.3s ease; } /* [cite: 101, 102] */
+        .btn-primary:hover { background-color: var(--secondary); border-color: var(--secondary); transform: translateY(-2px); box-shadow: 0 8px 25px rgba(67, 97, 238, 0.4); } /* [cite: 103, 104] */
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } } /* [cite: 35, 36, 112, 113, 157, 158, 222] */
+        @keyframes slideIn { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } } /* [cite: 37, 38, 96, 114, 115] */
+        
+        @media (max-width: 768px) {
+            .main-container { margin: 1rem auto; padding: 0 1rem; } /* [cite: 116] */
+            .content-card { padding: 1.5rem; } /* [cite: 39, 117] */
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                        {{ message }} <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        <div class="content-card">
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

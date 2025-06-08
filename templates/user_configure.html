@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+{% block title %}Configure Your Input | Data Matching System{% endblock %}
+
+{% block content %}
+<style>
+    /* Reusing styles from configure_admin.html for consistency */
+    .configure-container { max-width: 800px; margin: 2rem auto; }
+    .configure-header h1 { font-family: 'Montserrat', sans-serif; color: var(--primary); margin-bottom: 0.5rem; font-size: 2.2rem; font-weight: 700; text-align: center;}
+    .configure-header p { color: #555; text-align: center; margin-bottom: 1rem; font-size: 1.1rem;}
+    .key-info { text-align: center; margin-bottom: 2rem; font-size: 0.95rem; color: var(--secondary); background-color: rgba(63, 55, 201, 0.05); padding: 0.5rem; border-radius: 6px;}
+    .form-group { margin-bottom: 1.75rem; }
+    .form-group label { display: block; margin-bottom: 0.6rem; font-weight: 600; color: var(--dark); }
+    .form-select { width: 100%; padding: 0.8rem 1rem; border: 1px solid #ccc; border-radius: 8px; font-family: 'Poppins', sans-serif; font-size: 1rem; transition: all 0.3s ease; }
+    .form-select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(72, 149, 239, 0.25); outline: none; }
+    .parameter-checkboxes { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem; background: rgba(67, 97, 238, 0.03); padding: 1.5rem; border-radius: 12px; border: 1px solid rgba(67, 97, 238, 0.1); max-height: 300px; overflow-y: auto; } /* [cite: 143, 144] */
+    .checkbox-item { display: flex; align-items: center; gap: 0.75rem; padding: 0.5rem; background-color: #fff; border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); } /* [cite: 145] */
+    .checkbox-item input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--primary); margin:0; } /* [cite: 146] */
+    .checkbox-item label { font-weight: 500; color: var(--dark); margin: 0; cursor: pointer; flex-grow: 1; } /* [cite: 147] */
+    .form-actions { display: flex; gap: 1rem; margin-top: 2.5rem; justify-content: center; }
+    .submit-btn, .cancel-btn { padding: 0.8rem 2.2rem; font-size: 1rem; border-radius: 50px; cursor: pointer; transition: all 0.3s ease; font-weight: 600; text-decoration: none; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+    .submit-btn { background: var(--primary); color: white; border: none; }
+    .submit-btn:hover { background: var(--secondary); transform: translateY(-2px); box-shadow: 0 6px 20px rgba(67, 97, 238, 0.4); }
+    .cancel-btn { background: white; color: var(--primary); border: 2px solid var(--primary); }
+    .cancel-btn:hover { background: rgba(67, 97, 238, 0.05); transform: translateY(-2px); box-shadow: 0 6px 20px rgba(67, 97, 238, 0.2); }
+</style>
+
+<div class="configure-container">
+    <div class="configure-header">
+        <h1>Configure Your Input File</h1>
+        <p>Select the sheet from your file and the parameters you want to compare against the database.</p>
+        <div class="key-info">
+            The system will attempt to match rows using the Admin's Key Field: <strong>{{ admin_key_field }}</strong>.
+            Ensure this column (or its equivalent) is present in your selected sheet.
+        </div>
+    </div>
+
+    <form method="POST" action="{{ url_for('user_configure') }}">
+        <div class="form-group">
+            <label for="sheet_name_user">Select Sheet from Your File:</label>
+            <select name="sheet_name" id="sheet_name_user" class="form-select" required>
+                <option value="">-- Select Sheet --</option>
+                {% for sheet in sheet_names %}
+                <option value="{{ sheet }}">{{ sheet }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="parameters">Parameters for Comparison:</label>
+            <div id="parameterCheckboxesUser" class="parameter-checkboxes">
+                <p class="text-muted p-3">Select a sheet to see available parameters.</p>
+            </div>
+        </div>
+        
+        <div class="form-actions">
+            <button type="submit" class="submit-btn">Save & Start Matching</button>
+            <a href="{{ url_for('user_input') }}" class="cancel-btn">Re-upload Your File</a>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const sheetSelectUser = document.getElementById('sheet_name_user');
+    const checkboxesContainerUser = document.getElementById('parameterCheckboxesUser');
+    const adminKeyField = "{{ admin_key_field|e }}"; // Get admin key field safely
+
+    sheetSelectUser.addEventListener('change', function() {
+        const selectedSheet = this.value;
+        checkboxesContainerUser.innerHTML = '<p class="text-muted p-3">Loading parameters...</p>';
+
+        if (selectedSheet) {
+            fetch("{{ url_for('get_sheet_columns', file_type='user_input') }}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({ 'sheet_name': selectedSheet })
+            })
+            .then(response => response.json())
+            .then(data => {
+                checkboxesContainerUser.innerHTML = ''; // Clear previous
+                if (data.columns) {
+                    if (data.columns.length === 0) {
+                        checkboxesContainerUser.innerHTML = '<p class="text-danger p-3">Selected sheet has no columns or is empty.</p>';
+                        return;
+                    }
+                    data.columns.forEach(column => {
+                        // Do not offer the admin_key_field itself as a comparable parameter if it's used for matching.
+                        // However, user might want to compare it if their column name is different but maps to it.
+                        // For now, allow all columns from user sheet to be selected for comparison.
+                        // The matching logic will handle the key separately.
+
+                        const itemDiv = document.createElement('div');
+                        itemDiv.className = 'checkbox-item form-check'; /* [cite: 145] */
+                        
+                        const input = document.createElement('input');
+                        input.type = 'checkbox'; /* [cite: 125] */
+                        input.name = 'parameters'; /* [cite: 125] */
+                        input.value = column; /* [cite: 125] */
+                        input.id = 'param_user_' + column.replace(/\s+/g, '_'); // Create a unique ID
+                        input.className = 'form-check-input';
+                        
+                        const label = document.createElement('label');
+                        label.htmlFor = input.id; /* [cite: 125] */
+                        label.textContent = column; /* [cite: 126] */
+                        label.className = 'form-check-label';
+
+                        itemDiv.appendChild(input);
+                        itemDiv.appendChild(label);
+                        checkboxesContainerUser.appendChild(itemDiv);
+                    });
+                } else if (data.error) {
+                    checkboxesContainerUser.innerHTML = `<p class="text-danger p-3">Error: ${data.error}</p>`;
+                    console.error("Error fetching columns: ", data.error);
+                } else {
+                     checkboxesContainerUser.innerHTML = '<p class="text-muted p-3">No columns found or sheet is empty.</p>';
+                }
+            })
+            .catch(error => {
+                checkboxesContainerUser.innerHTML = '<p class="text-danger p-3">Error loading parameters.</p>';
+                console.error('Error fetching user columns:', error);
+            });
+        } else {
+            checkboxesContainerUser.innerHTML = '<p class="text-muted p-3">Select a sheet to see available parameters.</p>';
+        }
+    });
+});
+</script>
+{% endblock %}
